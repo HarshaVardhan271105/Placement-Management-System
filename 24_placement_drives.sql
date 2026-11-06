@@ -1,0 +1,1 @@
+select * from placement_results;
