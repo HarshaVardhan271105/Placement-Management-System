@@ -1,0 +1,244 @@
+Placement Management System Queries in High Level:
+
+1)create a view to display student names, application dates, and application statuses?
+Ans:create view student_application_view as
+select s.name, a.apply_date, a.status
+from students s
+inner join applications a
+on s.student_id = a.student_id;
+
+2)display all records from the created view?
+Ans:select * from student_application_view;
+
+3)display only selected applications from the view?
+Ans:select * from student_application_view where status = 'selected';
+
+4)create a view to display company names, locations, and placement drive dates?
+Ans:create view company_drive_view as
+select c.company_name, c.location, p.drive_date
+from companies c
+inner join placement_drives p
+on c.company_id = p.company_id;
+
+5)change the view definition to display company names and locations only?
+Ans:create or replace view company_drive_view as
+select company_name, location
+from companies;
+
+6)remove the company drive view?
+Ans:drop view company_drive_view;
+
+7)create an index on the student email column to improve searching?
+Ans:create index idx_student_email on students(email);
+
+8)create an index on application status and apply date?
+Ans:create index idx_application_status_date on applications(status, apply_date);
+
+9)display all indexes of the applications table?
+Ans:show index from applications;
+
+10)remove the index created on student email?
+Ans:drop index idx_student_email on students;
+
+11)create a procedure to display all student records?
+Ans:delimiter //
+create procedure get_all_students()
+begin
+select * from students;
+end //
+delimiter ;
+to execute:
+call get_all_students();
+
+12)create a procedure to display student details using student id?
+Ans:delimiter //
+create procedure get_student_by_id(in p_id int)
+begin
+select *
+from students
+where student_id = p_id;
+end //
+delimiter ;
+to execute:
+call get_student_by_id(101);
+
+13)create a procedure to display placement drives for a particular company?
+Ans:delimiter //
+create procedure get_drives_by_company(in p_company_id int)
+begin
+select *
+from placement_drives
+where company_id = p_company_id;
+end //
+delimiter ;
+to execute:
+call get_drives_by_company(1);
+
+14)create a procedure to get the total number of applications?
+Ans:delimiter //
+create procedure get_application_count(out total int)
+begin
+select count(*) into total
+from applications;
+end //
+delimiter ;
+to execute:
+call get_application_count(@total);
+select @total;
+
+15)create a procedure to display placement results based on status?
+Ans:delimiter //
+create procedure get_results_by_status(in p_status varchar(30))
+begin
+select * from placement_results
+where status = p_status;
+end //
+delimiter ;
+to execute:
+call get_results_by_status('selected');
+
+16)remove the procedure get_student_by_id?
+Ans:drop procedure get_student_by_id;
+
+17)create a function to return the total number of students?
+Ans:delimiter //
+create function get_total_students()
+returns int
+deterministic
+begin
+declare total int;
+select count(*) into total from students;
+return total;
+end //
+delimiter ;
+to execute:
+select get_total_students();
+
+18)create a function to return the total applications submitted by a student?
+Ans:delimiter //
+create function get_student_applications(p_id int)
+returns int
+deterministic
+reads sql data
+begin
+declare total int;
+select count(*) into total from applications where student_id = p_id;
+return total;
+end //
+delimiter ;
+to execute:
+select get_student_applications(101);
+
+19)create a function to return the highest placement package?
+Ans:delimiter //
+create function get_highest_package()
+returns decimal(5,2)
+deterministic
+reads sql data
+begin
+declare highest decimal(5,2);
+select max(package) into highest from placement_results;
+return highest;
+end //
+delimiter ;
+to execute:
+select get_highest_package();
+
+20)create a function to return the number of companies?
+Ans:delimiter //
+create function get_total_companies()
+returns int
+deterministic
+reads sql data
+begin
+declare total int;
+select count(*) into total
+from companies;
+return total;
+end //
+delimiter ;
+to execute:
+select get_total_companies();
+
+21)remove the function get_total_companies?
+Ans:drop function get_total_companies;
+
+22)create a trigger to prevent inserting an invalid application status?
+Ans:delimiter //
+create trigger check_application_status
+before insert on applications
+for each row
+begin
+if new.status not in ('pending', 'selected', 'rejected') 
+then
+signal sqlstate '45000'
+set message_text = 'invalid application status';
+end if;
+end //
+delimiter ;
+
+23)test the trigger with a valid application status?
+Ans:insert into applications(application_id, apply_date, status, student_id, drive_id)
+values(6, '2026-11-07', 'pending', 101, 3);
+invalid status test:
+insert into applications(application_id, apply_date, status, student_id, drive_id)
+values(7, '2026-11-07', 'waiting', 102, 3);
+
+24)prevent updating a placement package to a negative value?
+Ans:delimiter //
+create trigger check_package_before_update
+before update on placement_results
+for each row
+begin
+if new.package < 0 then
+signal sqlstate '45000'
+set message_text = 'package cannot be negative';
+end if;
+end //
+delimiter ;
+
+25)test before update trigger?
+Ans:update placement_results
+set package = -5
+where result_id = 1;
+
+26)display all triggers in the current database?
+Ans:show triggers;
+
+27)remove the package validation trigger?
+Ans:drop trigger check_package_before_update;
+
+28)start a new transaction?
+Ans:start transaction;
+
+29)update a student's email and permanently save the change?
+Ans:start transaction;
+update students
+set email = 'rahul_new@gmail.com'
+where student_id = 101;
+commit;
+
+30)update a company location but cancel the change?
+Ans:start transaction;
+update companies
+set location = 'chennai'
+where company_id = 1;
+rollback;
+
+31)create a savepoint after updating a company location?
+Ans:start transaction;
+update companies
+set location = 'chennai'
+where company_id = 1;
+savepoint sp1;
+
+32)rollback the transaction to savepoint sp1?
+Ans:rollback to sp1;
+
+33)remove the savepoint?
+Ans:release savepoint sp1;
+
+34)disable automatic commit?
+Ans:set autocommit = 0;
+to enable it again:
+set autocommit = 1;

@@ -1,0 +1,83 @@
+Placement Management System Queries in Medium Level:
+
+1)Display each student's name along with their department name?
+Ans:select s.name, d.dept_name from students s inner join department d on s.dept_id = d.dept_id;
+
+2)Display student names, application dates, and application statuses?
+Ans:select s.name, a.apply_date, a.status from students s
+inner join applications a on s.student_id = a.student_id;
+
+3)Display company names, placement drive dates, and eligibility criteria?
+Ans:select c.company_name, p.drive_date, p.eligibility from companies c inner join placement_drives p on c.company_id = p.company_id;
+
+4)Display interview dates, rounds, and placement result statuses?
+Ans:select i.date, i.round, r.status from interviews i inner join placement_results r on i.interview_id = r.interview_id;
+
+5)Display student names, application statuses, and company names?
+Ans:select s.name, a.status, c.company_name from students s
+inner join applications a on s.student_id = a.student_id
+inner join placement_drives p on a.drive_id = p.drive_id
+inner join companies c on p.company_id = c.company_id;
+
+6)display all students along with their application details, including students who have not applied?
+Ans:select s.name, a.application_id, a.status from students s
+left join applications a on s.student_id = a.student_id;
+
+7)display all companies and their placement drive details, including companies without drives?
+Ans:select c.company_name, p.drive_id, p.drive_date from placement_drives p right join companies c on p.company_id = c.company_id;
+
+8)display students who have been selected?
+Ans:select s.name, a.status from students s inner join applications a on s.student_id = a.student_id where a.status = 'selected';
+
+9)display company names and their placement drive dates in ascending order?
+Ans:select c.company_name, p.drive_date from companies c
+inner join placement_drives p on c.company_id = p.company_id
+order by p.drive_date asc;
+
+10)display the total number of placement drives conducted by each company?
+Ans:select c.company_name, count(p.drive_id) as total_drives
+from companies c left join placement_drives p on c.company_id = p.company_id group by c.company_id, c.company_name;
+
+11)display the placement result details whose package is greater than the average package?
+Ans:select * from placement_results where package > (select avg(package) from placement_results);
+
+12)display the placement result with the highest package?
+Ans:select * from placement_results where package = (select max(package) from placement_results);
+
+13)display the placement result with the lowest available package?
+Ans:select * from placement_results where package = (select min(package) from placement_results);
+
+14)display the names of students who have submitted applications with selected status?
+Ans:select name from students where student_id in (select student_id from applications where status = 'selected');
+
+15)display the names of students who have not applied for any placement drive?
+Ans:select name from students where student_id not in (select student_id from applications);
+
+16)display students who have at least one application?
+Ans:select * from students s where exists (select 1 from applications a where a.student_id = s.student_id);
+
+17)display students who have no applications?
+Ans:select * from students s where not exists (select 1 from applications a where a.student_id = s.student_id);
+
+18)display companies that have at least one placement drive?
+Ans:select * from companies c where exists (select 1 from placement_drives p where p.company_id = c.company_id);
+
+19)display placement results whose package is greater than any package offered in interviews?
+Ans:select * from placement_results where package > any (select package from placement_results where package is not null);
+
+20)display placement results whose package is greater than all other available packages?
+Ans:select * from placement_results where package > all (select package from placement_results where package is not null);
+
+21)display all student names and company names, including duplicates?
+Ans:select name as entity_name from students
+union all
+select company_name from companies;
+
+22)display all possible combinations of companies and skills?
+Ans:select c.company_name, s.skill_name from companies c cross join skills s;
+
+23)display departments having more than one student?
+Ans:select d.dept_name, count(s.student_id) as total_students
+from department d inner join students s on d.dept_id =s.dept_id
+group by d.dept_id, d.dept_name having count(s.student_id) > 1;
+
